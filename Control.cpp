@@ -32,10 +32,8 @@ void Control::onCreateClicked() {
         ext = filename.substr(filename.find_last_of("."));
     }
 
-    Rect *current_config = _drawArea.get_crop_config();
-    std::stringstream left_stream;
-    std::stringstream middle_stream;
-    std::stringstream right_stream;
+    MonitorConfig *cfg = _drawArea.get_monitor_config();
+
     std::stringstream resized_image_location;
     std::stringstream resize_image_cmd;
     std::stringstream remove_resized_image_cmd;
@@ -45,26 +43,14 @@ void Control::onCreateClicked() {
     std::string resized_image_path = resized_image_location.str();
 
     //resize image to fit monitors
-    resize_image_cmd << "convert \"" << _image_path << "\" -resize " << _drawArea.get_last_image_scale() * 100 <<
-    "% \"" << resized_image_path << "\"";
+    resize_image_cmd << "convert \"" << _image_path << "\" -resize " << cfg->required_image_scale * 100 << "% \"" <<
+    resized_image_path << "\"";
     system(resize_image_cmd.str().c_str());
     std::cout << resize_image_cmd.str() << '\n';
 
-    //crop images
-    left_stream << "convert \"" << resized_image_path << "\" -crop " << get_crop_args(current_config[0]) << " \"" <<
-    dir << "/" << name << "_l" << ext << "\"";
-    system(left_stream.str().c_str());
-    std::cout << left_stream.str() << '\n';
-
-    middle_stream << "convert \"" << resized_image_path << "\" -crop " << get_crop_args(current_config[1]) << " \"" <<
-    dir << "/" << name << "_m" << ext << "\"";
-    system(middle_stream.str().c_str());
-    std::cout << middle_stream.str() << '\n';
-
-    right_stream << "convert \"" << resized_image_path << "\" -crop " << get_crop_args(current_config[2]) << " \"" <<
-    dir << "/" << name << "_r" << ext << "\"";
-    system(right_stream.str().c_str());
-    std::cout << right_stream.str() << '\n';
+    system(cfg->get_image_magick_cmd(0, dir, name, ext, resized_image_path).c_str());
+    system(cfg->get_image_magick_cmd(1, dir, name, ext, resized_image_path).c_str());
+    system(cfg->get_image_magick_cmd(2, dir, name, ext, resized_image_path).c_str());
 
     //remove the resized image
     remove_resized_image_cmd << "rm " << "\"" << resized_image_path << "\"";

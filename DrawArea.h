@@ -10,6 +10,7 @@
 #include <gdkmm/pixbuf.h>
 #include <gdkmm/general.h>
 #include "Rect.h"
+#include "MonitorConfig.h"
 
 
 #define LEFT 0
@@ -28,9 +29,7 @@ public:
 
     double get_last_image_scale();
 
-    double get_image_width();
-
-    double get_image_height();
+    MonitorConfig *get_monitor_config();
 
     double get_last_monitor_scale();
 
@@ -62,14 +61,10 @@ protected:
 
 private:
     void draw_rectangle(const Cairo::RefPtr<Cairo::Context> &cr, double x, double y, double width, double height);
-
-    Rect *_monitors = new Rect[3];
     double _x = 0, _y = 0, _mouse_x_at_click = 0, _mouse_y_at_click = 0, _monitor_x_at_click = 0, _monitor_y_at_click = 0;
     double _last_image_scale = 0, _last_monitor_scale = 0;
     Glib::RefPtr<Gdk::Pixbuf> _image, _image_original;
-
-    float get_all_monitor_width();
-
+    MonitorConfig _monitor_config;
     bool _pressed = false;
 };
 

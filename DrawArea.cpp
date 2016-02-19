@@ -7,25 +7,29 @@
 #include "DrawArea.h"
 
 bool DrawArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
-    double middleX = _x + _monitors[LEFT].get_w();
-    double rightX = _x + _monitors[LEFT].get_w() + _monitors[MIDDLE].get_w();
-    double middleY = _y + (_monitors[RIGHT].get_h() - _monitors[MIDDLE].get_h()) / 2;
-    double leftY = _y + (_monitors[RIGHT].get_h() - _monitors[LEFT].get_h()) / 2;
+    double middleX = _x + _monitor_config.get_monitor_cfg(0)->get_w();
+    double rightX = _x + _monitor_config.get_monitor_cfg(0)->get_w() + _monitor_config.get_monitor_cfg(1)->get_w();
+    double middleY =
+            _y + (_monitor_config.get_monitor_cfg(2)->get_h() - _monitor_config.get_monitor_cfg(1)->get_h()) / 2;
+    double leftY = _y + (_monitor_config.get_monitor_cfg(2)->get_h() - _monitor_config.get_monitor_cfg(0)->get_h()) / 2;
 
     Gdk::Cairo::set_source_pixbuf(cr, _image, 0, 0);
     cr->paint();
 
-    DrawArea::draw_rectangle(cr, _x, leftY, _monitors[LEFT].get_w(), _monitors[LEFT].get_h());
-    DrawArea::draw_rectangle(cr, middleX, middleY, _monitors[MIDDLE].get_w(), _monitors[MIDDLE].get_h());
-    DrawArea::draw_rectangle(cr, rightX, _y, _monitors[RIGHT].get_w(), _monitors[RIGHT].get_h());
+    DrawArea::draw_rectangle(cr, _x, leftY, _monitor_config.get_monitor_cfg(0)->get_w(),
+                             _monitor_config.get_monitor_cfg(0)->get_h());
+    DrawArea::draw_rectangle(cr, middleX, middleY, _monitor_config.get_monitor_cfg(1)->get_w(),
+                             _monitor_config.get_monitor_cfg(1)->get_h());
+    DrawArea::draw_rectangle(cr, rightX, _y, _monitor_config.get_monitor_cfg(2)->get_w(),
+                             _monitor_config.get_monitor_cfg(2)->get_h());
 
     return true;
 }
 
 void DrawArea::set_monitor_sizes(int wLeft, int hLeft, int wMiddle, int hMiddle, int wRight, int hRight) {
-    _monitors[LEFT].set_original_size(wLeft, hLeft);
-    _monitors[MIDDLE].set_original_size(wMiddle, hMiddle);
-    _monitors[RIGHT].set_original_size(wRight, hRight);
+    _monitor_config.set_original_size(0, wLeft, hLeft);
+    _monitor_config.set_original_size(1, wMiddle, hMiddle);
+    _monitor_config.set_original_size(2, wRight, hRight);
 }
 
 void DrawArea::set_position(double x, double y) {
@@ -83,9 +87,7 @@ DrawArea::~DrawArea() { }
 
 void DrawArea::set_monitor_scale(double scale) {
     _last_monitor_scale = scale;
-    _monitors[LEFT].scale_size(scale);
-    _monitors[MIDDLE].scale_size(scale);
-    _monitors[RIGHT].scale_size(scale);
+    _monitor_config.scale_all(scale);
     signal_monitor_scale.emit(_last_monitor_scale);
     queue_draw();
 }
@@ -111,10 +113,6 @@ void DrawArea::change_monitor_scale(double delta_scale) {
 void DrawArea::change_image_scale(double delta_factor) {
     set_image_scale(_last_image_scale + delta_factor);
     signal_image_scale.emit(_last_image_scale + delta_factor);
-}
-
-float DrawArea::get_all_monitor_width() {
-    return _monitors[0].get_w() + _monitors[1].get_w() + _monitors[2].get_w();
 }
 
 double DrawArea::get_last_image_scale() {
@@ -170,10 +168,7 @@ bool DrawArea::on_scroll_event(GdkEventScroll *event) {
     return true;
 }
 
-double DrawArea::get_image_width() {
-    return _image_original->get_width();
-}
-
-double DrawArea::get_image_height() {
-    return _image_original->get_height();
+MonitorConfig *DrawArea::get_monitor_config() {
+    _monitor_config.scale_monitors(_image_original->get_width(), _image_original->get_height(), _last_image_scale);
+    return &_monitor_config;
 }

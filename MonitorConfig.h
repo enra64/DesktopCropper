@@ -10,9 +10,7 @@
 
 class MonitorConfig {
 public:
-    void get_image_magick_cmd(int index);
-
-    double scale_monitors(double image_width, double image_height, double image_scale);
+    void scale_monitors(double image_width, double image_height, double image_scale);
 
     void position_monitors(double x, double y);
 
@@ -20,14 +18,22 @@ public:
 
     Rect *get_monitor_cfg(unsigned long index);
 
-private:
-    std::vector<Rect> _cfg_rectangles;
-
     void scale_all(double factor);
-
     double width_all();
 
     double height_max();
+
+    void set_original_size(unsigned long index, double w, double h);
+
+
+    std::string get_image_magick_cmd(unsigned long index, std::string dir, std::string name, std::string ext,
+                                     std::string resized_image_path);
+
+    double required_image_scale = 0;
+private:
+    std::string get_crop_args(unsigned long index);
+
+    std::vector<Rect> _cfg_rectangles;
 };
 
 
