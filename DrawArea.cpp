@@ -62,9 +62,9 @@ void DrawArea::loadImage(std::string path) {
         _image = Gdk::Pixbuf::create_from_file(path);
         origWidth = _image->get_width();
         origHeight = _image->get_height();
-        /*float wFactor = (origWidth / (float) (1920-500));
-        float hFactor = (origHeight / (float) 1000);
-        factor = wFactor < hFactor ? wFactor : hFactor;*/
+        float wFactor = ((float) (1920 - 500) / origWidth);
+        float hFactor = ((float) 1000 / origHeight);
+        factor = wFactor < hFactor ? wFactor : hFactor;
     }
     catch (const Gio::ResourceError &ex) {
         std::cerr << "ResourceError: " << ex.what() << std::endl;
@@ -74,9 +74,8 @@ void DrawArea::loadImage(std::string path) {
     }
 
     if (_image) {
-        set_image_scale(1);
-        set_monitor_scale((float) _image->get_width() / get_all_monitor_width());
-        std::cout << _image->get_width() << 'x' << get_all_monitor_width() << '\n';
+        set_image_scale(factor);
+        set_monitor_scale(factor);
     }
 }
 
@@ -87,6 +86,7 @@ void DrawArea::set_monitor_scale(double scale) {
     _monitors[LEFT].scale_size(scale);
     _monitors[MIDDLE].scale_size(scale);
     _monitors[RIGHT].scale_size(scale);
+    signal_monitor_scale.emit(_last_monitor_scale);
     queue_draw();
 }
 
@@ -98,6 +98,7 @@ void DrawArea::set_image_scale(double factor) {
     double orig_height = _image_original->get_height();
     _image = _image_original->scale_simple((int) (factor * orig_width), (int) (factor * orig_height),
                                            Gdk::INTERP_BILINEAR);
+    signal_image_scale.emit(_last_image_scale);
     set_size_request(_image->get_width(), _image->get_height());
     queue_draw();
 }
@@ -169,32 +170,10 @@ bool DrawArea::on_scroll_event(GdkEventScroll *event) {
     return true;
 }
 
-Rect *DrawArea::get_crop_config() {
-    //get instances of everything
+double DrawArea::get_image_width() {
+    return _image_original->get_width();
+}
 
-    Rect *cfg = new Rect[3];
-    Rect *left = &cfg[0];
-    Rect *middle = &cfg[1];
-    Rect *right = &cfg[2];
-    //sizes
-    left->w = 1024;
-    left->h = 1280;
-    middle->w = 1920;
-    middle->h = 1080;
-    right->w = 1080;
-    right->h = 1920;
-    //positions
-    //scale image and monitors by the same factor so that the image is 1:1
-    //double image_one_to_one_factor = 1 / _last_image_scale;
-    //int new_x = (int) (image_one_to_one_factor * _x), new_y = (int) (image_one_to_one_factor * _y);
-    //x
-    left->x = (int) _x;
-    middle->x = left->x + left->w;
-    right->x = left->x + left->w + middle->w;
-    //y
-    right->y = (int) _y;
-    middle->y = right->y + (right->h - middle->h) / 2;
-    left->y = right->y + (right->h - left->h) / 2;
-
-    return _monitors;
+double DrawArea::get_image_height() {
+    return _image_original->get_height();
 }

@@ -28,6 +28,10 @@ public:
 
     double get_last_image_scale();
 
+    double get_image_width();
+
+    double get_image_height();
+
     double get_last_monitor_scale();
 
     void set_image_scale(double factor);
@@ -44,9 +48,6 @@ public:
     sigc::signal<void, double> signal_y_pos;
     sigc::signal<void, double> signal_monitor_scale;
     sigc::signal<void, double> signal_image_scale;
-
-    Rect *get_crop_config();
-
 protected:
     virtual bool on_draw(const Cairo::RefPtr<Cairo::Context> &cr) override;
 
