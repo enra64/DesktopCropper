@@ -111,9 +111,7 @@ void MonitorConfig::addMonitor(double w, double h) {
 
 void MonitorConfig::prepare_cfg_for_crop(double orig_image_width, double orig_image_height, double image_scale,
                                          double x, double y, double monitor_scale) {
-    double scaled_background_x = (x + width_all()) / monitor_scale;
-    double scaled_background_y = (y + height_max()) / monitor_scale;
-    if (scaled_background_x < orig_image_width && scaled_background_y < orig_image_height) {
+    if (!requires_image_rescaling(orig_image_width, orig_image_height, image_scale, x, y, monitor_scale)) {
         _required_image_scale = 1;
         //the monitors fit 1:1 into the image, we just need to scale everything to original size and calculate the monitor offset
         scale_sizes(1);
@@ -130,4 +128,11 @@ void MonitorConfig::prepare_cfg_for_crop(double orig_image_width, double orig_im
         y *= 1 / monitor_scale;
         position_monitors(x, y);
     }
+}
+
+bool MonitorConfig::requires_image_rescaling(double orig_image_width, double orig_image_height, double image_scale,
+                                             double x, double y, double monitor_scale) {
+    double scaled_background_x = (x + width_all()) / monitor_scale;
+    double scaled_background_y = (y + height_max()) / monitor_scale;
+    return scaled_background_x > orig_image_width || scaled_background_y > orig_image_height;
 }

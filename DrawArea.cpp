@@ -84,6 +84,7 @@ void DrawArea::set_monitor_scale(double scale) {
     _last_monitor_scale = scale;
     _monitor_config.scale_all(scale);
     signal_monitor_scale.emit(_last_monitor_scale);
+    update_scale_warning_label();
     queue_draw();
 }
 
@@ -97,6 +98,7 @@ void DrawArea::set_image_scale(double factor) {
                                            Gdk::INTERP_BILINEAR);
     signal_image_scale.emit(_last_image_scale);
     set_size_request(_image->get_width(), _image->get_height());
+    update_scale_warning_label();
     queue_draw();
 }
 
@@ -167,4 +169,22 @@ MonitorConfig *DrawArea::get_monitor_config() {
     _monitor_config.prepare_cfg_for_crop(_image_original->get_width(), _image_original->get_height(), _last_image_scale,
                                          _x, _y, _last_monitor_scale);
     return &_monitor_config;
+}
+
+void DrawArea::update_scale_warning_label() {
+    bool needs_rescale = _monitor_config.requires_image_rescaling(_image_original->get_width(),
+                                                                  _image_original->get_height(), _last_image_scale,
+                                                                  _x, _y, _last_monitor_scale);
+    if (needs_rescale) {
+        std::string label = "Image scale factor: ";
+        label.append(std::to_string(_last_image_scale / _last_monitor_scale));
+        _scale_warning_label->set_text(label);
+    }
+    else {
+        _scale_warning_label->set_text("No scaling needed");
+    }
+}
+
+void DrawArea::set_scale_warning_label(Gtk::Label *label) {
+    _scale_warning_label = label;
 }

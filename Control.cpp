@@ -69,19 +69,19 @@ void Control::onLoadClicked() {
     filter_any->add_pattern("*");
     dialog.add_filter(filter_any);
 
-    dialog.run();
+    if (dialog.run() == Gtk::RESPONSE_OK) {
+        _image_path = dialog.get_filename();
 
-    _image_path = dialog.get_filename();
+        _drawArea.signal_x_pos.connect(sigc::mem_fun(this, &Control::monitor_moved_x));
+        _drawArea.signal_y_pos.connect(sigc::mem_fun(this, &Control::monitor_moved_y));
+        _drawArea.signal_monitor_scale.connect(sigc::mem_fun(this, &Control::monitor_scaled));
+        _drawArea.signal_image_scale.connect(sigc::mem_fun(this, &Control::image_scaled));
 
-    _drawArea.signal_x_pos.connect(sigc::mem_fun(this, &Control::monitor_moved_x));
-    _drawArea.signal_y_pos.connect(sigc::mem_fun(this, &Control::monitor_moved_y));
-    _drawArea.signal_monitor_scale.connect(sigc::mem_fun(this, &Control::monitor_scaled));
-    _drawArea.signal_image_scale.connect(sigc::mem_fun(this, &Control::image_scaled));
-
-    _drawArea.loadImage(_image_path);
-    image_scale->set_value(_drawArea.get_last_image_scale());
-    monitor_scale->set_value(_drawArea.get_last_monitor_scale());
-    _drawArea.show();
+        _drawArea.loadImage(_image_path);
+        _image_scale->set_value(_drawArea.get_last_image_scale());
+        _monitor_scale->set_value(_drawArea.get_last_monitor_scale());
+        _drawArea.show();
+    }
 }
 
 Gtk::Window *Control::init(Glib::RefPtr<Gtk::Builder> builder) {
@@ -101,12 +101,9 @@ Gtk::Window *Control::init(Glib::RefPtr<Gtk::Builder> builder) {
 
     pane->add2(_drawArea);
 
-    int a = 6;
-    int b = 3;
-
-    float test = (float) (a - b) / (float) 50;
-
-    std::cout << test << '\n';
+    Gtk::Label *label;
+    builder->get_widget("scale_warning_label", label);
+    _drawArea.set_scale_warning_label(label);
 
     loadFileButton->signal_clicked().connect(sigc::mem_fun(this, &Control::onLoadClicked));
     createOutputButton->signal_clicked().connect(sigc::mem_fun(this, &Control::onCreateClicked));
@@ -121,13 +118,13 @@ Control::Control() {
 }
 
 void Control::init_scales(Glib::RefPtr<Gtk::Builder> builder) {
-    image_scale->set_range(0.5, 10);
-    monitor_scale->set_range(0, 500);
+    _image_scale->set_range(0.5, 10);
+    _monitor_scale->set_range(0, 500);
     _x_monitor_position_scale->set_range(0, 5000);
     y_monitor_position_scale->set_range(0, 5000);
 
-    image_scale->signal_value_changed().connect(sigc::mem_fun(this, &Control::image_scale_moved));
-    monitor_scale->signal_value_changed().connect(sigc::mem_fun(this, &Control::monitor_scale_moved));
+    _image_scale->signal_value_changed().connect(sigc::mem_fun(this, &Control::image_scale_moved));
+    _monitor_scale->signal_value_changed().connect(sigc::mem_fun(this, &Control::monitor_scale_moved));
     _x_monitor_position_scale->signal_value_changed().connect(sigc::mem_fun(this, &Control::x_scale_moved));
     y_monitor_position_scale->signal_value_changed().connect(sigc::mem_fun(this, &Control::y_scale_moved));
 }
@@ -150,13 +147,13 @@ void Control::init_spin_buttons(Glib::RefPtr<Gtk::Builder> builder) {
 }
 
 void Control::image_scale_moved() {
-    _drawArea.set_image_scale(image_scale->get_value());
-    _image_scale_spin_btn->set_value(image_scale->get_value());
+    _drawArea.set_image_scale(_image_scale->get_value());
+    _image_scale_spin_btn->set_value(_image_scale->get_value());
 }
 
 void Control::monitor_scale_moved() {
-    _drawArea.set_monitor_scale(monitor_scale->get_value());
-    _monitor_scale_spin_btn->set_value(monitor_scale->get_value());
+    _drawArea.set_monitor_scale(_monitor_scale->get_value());
+    _monitor_scale_spin_btn->set_value(_monitor_scale->get_value());
 }
 
 void Control::x_scale_moved() {
@@ -171,12 +168,12 @@ void Control::y_scale_moved() {
 
 void Control::image_spin_button_clicked() {
     _drawArea.set_image_scale(_image_scale_spin_btn->get_value());
-    image_scale->set_value(_image_scale_spin_btn->get_value());
+    _image_scale->set_value(_image_scale_spin_btn->get_value());
 }
 
 void Control::monitor_spin_button_clicked() {
     _drawArea.set_monitor_scale(_monitor_scale_spin_btn->get_value());
-    monitor_scale->set_value(_monitor_scale_spin_btn->get_value());
+    _monitor_scale->set_value(_monitor_scale_spin_btn->get_value());
 }
 
 void Control::x_spin_button_clicked() {
@@ -190,8 +187,8 @@ void Control::y_spin_button_clicked() {
 }
 
 void Control::init_find_all(Glib::RefPtr<Gtk::Builder> builder) {
-    builder->get_widget("scale_image", image_scale);
-    builder->get_widget("scale_monitors", monitor_scale);
+    builder->get_widget("scale_image", _image_scale);
+    builder->get_widget("scale_monitors", _monitor_scale);
     builder->get_widget("x_monitors", _x_monitor_position_scale);
     builder->get_widget("y_monitors", y_monitor_position_scale);
 
@@ -213,10 +210,10 @@ void Control::monitor_moved_y(double y) {
 
 void Control::monitor_scaled(double new_factor) {
     _monitor_scale_spin_btn->set_value(new_factor);
-    monitor_scale->set_value(new_factor);
+    _monitor_scale->set_value(new_factor);
 }
 
 void Control::image_scaled(double new_factor) {
     _image_scale_spin_btn->set_value(new_factor);
-    image_scale->set_value(new_factor);
+    _image_scale->set_value(new_factor);
 }

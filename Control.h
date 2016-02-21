@@ -56,8 +56,8 @@ private:
     void y_spin_button_clicked();
 
     Cairo::RefPtr<Cairo::Context> drawContext;
-    Gtk::Scale *image_scale;
-    Gtk::Scale *monitor_scale;
+    Gtk::Scale *_image_scale;
+    Gtk::Scale *_monitor_scale;
     Gtk::Scale *_x_monitor_position_scale;
     Gtk::Scale *y_monitor_position_scale;
     Gtk::SpinButton *_image_scale_spin_btn;

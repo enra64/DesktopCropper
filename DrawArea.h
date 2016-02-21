@@ -9,6 +9,7 @@
 #include <gtkmm/drawingarea.h>
 #include <gdkmm/pixbuf.h>
 #include <gdkmm/general.h>
+#include <gtkmm/label.h>
 #include "Rect.h"
 #include "MonitorConfig.h"
 
@@ -37,6 +38,8 @@ public:
 
     void loadImage(std::string path);
 
+    void set_scale_warning_label(Gtk::Label *label);
+
     sigc::signal<void, double> signal_x_pos;
     sigc::signal<void, double> signal_y_pos;
     sigc::signal<void, double> signal_monitor_scale;
@@ -54,6 +57,9 @@ protected:
     bool on_scroll_event(GdkEventScroll *event);
 
 private:
+    void update_scale_warning_label();
+
+    Gtk::Label *_scale_warning_label;
     void draw_rectangle(const Cairo::RefPtr<Cairo::Context> &cr, double x, double y, double width, double height);
     double _x = 0, _y = 0, _mouse_x_at_click = 0, _mouse_y_at_click = 0, _monitor_x_at_click = 0, _monitor_y_at_click = 0;
     double _last_image_scale = 0, _last_monitor_scale = 0;
