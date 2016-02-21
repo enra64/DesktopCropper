@@ -16,7 +16,7 @@ class Control {
 public:
     void on_save_clicked();
 
-    void onLoadClicked();
+    void on_open_clicked();
 
     void monitor_moved_x(double x);
 
@@ -46,6 +46,8 @@ private:
     void create(std::string path, bool verbose);
 
     void image_scale_moved();
+
+    bool on_shortcut(GdkEventKey *event);
 
     void monitor_scale_moved();
 

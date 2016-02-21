@@ -55,7 +55,8 @@ void Control::create(std::string filename, bool verbose) {
 }
 
 void Control::on_save_clicked() {
-    create(_last_filename, false);
+    if (!_last_filename.empty())
+        create(_last_filename, false);
 }
 
 void Control::on_save_as_clicked() {
@@ -70,7 +71,7 @@ void Control::on_save_as_clicked() {
     }
 }
 
-void Control::onLoadClicked() {
+void Control::on_open_clicked() {
     Gtk::FileChooserDialog dialog("Please choose a file", Gtk::FILE_CHOOSER_ACTION_OPEN);
     //Add response buttons the the dialog:
     dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
@@ -110,6 +111,9 @@ Gtk::Window *Control::init(Glib::RefPtr<Gtk::Builder> builder) {
 
     pane->add2(_drawArea);
 
+    window->add_events(Gdk::KEY_PRESS_MASK);
+    window->signal_key_release_event().connect(sigc::mem_fun(this, &Control::on_shortcut));
+
     Gtk::Label *label;
     builder->get_widget("scale_warning_label", label);
     _drawArea.set_scale_warning_label(label);
@@ -128,7 +132,7 @@ void Control::init_menu(Glib::RefPtr<Gtk::Builder> builder) {
     builder->get_widget("menu_save", _menu_save);
     builder->get_widget("menu_save_as", _menu_save_as);
 
-    _menu_open->signal_activate().connect(sigc::mem_fun(this, &Control::onLoadClicked));
+    _menu_open->signal_activate().connect(sigc::mem_fun(this, &Control::on_open_clicked));
     _menu_save->signal_activate().connect(sigc::mem_fun(this, &Control::on_save_clicked));
     _menu_save_as->signal_activate().connect(sigc::mem_fun(this, &Control::on_save_as_clicked));
 
@@ -234,4 +238,31 @@ void Control::monitor_scaled(double new_factor) {
 void Control::image_scaled(double new_factor) {
     _image_scale_spin_btn->set_value(new_factor);
     _image_scale->set_value(new_factor);
+}
+
+bool Control::on_shortcut(GdkEventKey *event) {
+    if (!event->state & GDK_CONTROL_MASK)
+        return false;
+    switch (event->keyval) {
+        case GDK_KEY_S:
+        case GDK_KEY_s:
+            if (_last_filename.empty()) {
+                on_save_as_clicked();
+            }
+            else {
+                if (event->state & GDK_SHIFT_MASK)
+                    on_save_as_clicked();
+                else
+                    on_save_clicked();
+            }
+            return true;
+        case GDK_KEY_O:
+        case GDK_KEY_o:
+        case GDK_KEY_A:
+        case GDK_KEY_a:
+            on_open_clicked();
+            return true;
+        default:
+            return false;
+    }
 }
