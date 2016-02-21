@@ -36,14 +36,24 @@ std::string MonitorConfig::get_crop_args(unsigned long index) {
     return ss.str();
 }
 
-void MonitorConfig::set_size(unsigned long monitor_count) {
-    _cfg_rectangles.reserve(monitor_count);
-}
-
 void MonitorConfig::scale_all(double factor) {
     for (unsigned long i = 0; i < _cfg_rectangles.size(); i++) {
         Rect *r = &_cfg_rectangles.at(i);
         r->scale_all(factor);
+    }
+}
+
+void MonitorConfig::scale_sizes(double factor) {
+    for (unsigned long i = 0; i < _cfg_rectangles.size(); i++) {
+        Rect *r = &_cfg_rectangles.at(i);
+        r->scale_size_from_original(factor);
+    }
+}
+
+void MonitorConfig::scale_positions(double factor) {
+    for (unsigned long i = 0; i < _cfg_rectangles.size(); i++) {
+        Rect *r = &_cfg_rectangles.at(i);
+        r->scale_position(factor);
     }
 }
 
@@ -53,15 +63,16 @@ Rect *MonitorConfig::get_monitor_cfg(unsigned long index) {
 
 void MonitorConfig::scale_monitors(double image_width, double image_height, double image_scale) {
     if (width_all() < image_width && height_max() < image_height) {
-        scale_all(1 / image_scale);
-        required_image_scale = 1;
+        scale_all(1);
+        _required_image_scale = 1;
     }
     else {
         double scale_to_fit_x = width_all() / image_width;
         double scale_to_fit_y = height_max() / image_height;
         double scale = scale_to_fit_x < scale_to_fit_y ? scale_to_fit_y : scale_to_fit_x;
+        scale_all(1 / image_scale);
         std::cout << "not implemented!\n";
-        required_image_scale = scale;
+        _required_image_scale = scale;
     }
 }
 
@@ -85,11 +96,38 @@ void MonitorConfig::position_monitors(double x, double y) {
     double h_max = height_max();
     for (unsigned long i = 0; i < _cfg_rectangles.size(); i++) {
         Rect *r = &_cfg_rectangles.at(i);
-        r->set_position(x_sum, (h_max - r->get_h()) / 2);
+        r->set_position(x_sum, y + (h_max - r->get_h()) / 2);
         x_sum += r->get_w();
     }
 }
 
 void MonitorConfig::set_original_size(unsigned long index, double w, double h) {
     _cfg_rectangles.at(index).set_original_size(w, h);
+}
+
+void MonitorConfig::addMonitor(double w, double h) {
+    _cfg_rectangles.push_back(Rect(0, 0, w, h));
+}
+
+void MonitorConfig::prepare_cfg_for_crop(double orig_image_width, double orig_image_height, double image_scale,
+                                         double x, double y, double monitor_scale) {
+    double scaled_background_x = (x + width_all()) / monitor_scale;
+    double scaled_background_y = (y + height_max()) / monitor_scale;
+    if (scaled_background_x < orig_image_width && scaled_background_y < orig_image_height) {
+        _required_image_scale = 1;
+        //the monitors fit 1:1 into the image, we just need to scale everything to original size and calculate the monitor offset
+        scale_sizes(1);
+        x /= monitor_scale;
+        y /= monitor_scale;
+        position_monitors(x, y);
+    }
+    else {
+        //monitors out of image bounds, increase image size
+        _required_image_scale = image_scale / monitor_scale;
+        std::cout << "scaling image" << _required_image_scale << "\n";
+        scale_sizes(1);
+        x *= 1 / monitor_scale;
+        y *= 1 / monitor_scale;
+        position_monitors(x, y);
+    }
 }

@@ -26,12 +26,6 @@ bool DrawArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
     return true;
 }
 
-void DrawArea::set_monitor_sizes(int wLeft, int hLeft, int wMiddle, int hMiddle, int wRight, int hRight) {
-    _monitor_config.set_original_size(0, wLeft, hLeft);
-    _monitor_config.set_original_size(1, wMiddle, hMiddle);
-    _monitor_config.set_original_size(2, wRight, hRight);
-}
-
 void DrawArea::set_position(double x, double y) {
     if (x >= 0)
         _x = x;
@@ -52,8 +46,9 @@ void DrawArea::draw_rectangle(const Cairo::RefPtr<Cairo::Context> &cr, double x,
 }
 
 DrawArea::DrawArea() {
-    set_monitor_sizes(1024, 1280, 1920, 1080, 1080, 1920);
-    //set_monitor_sizes(5, 4, 16, 9, 9, 16);
+    _monitor_config.addMonitor(1024, 1280);
+    _monitor_config.addMonitor(1920, 1080);
+    _monitor_config.addMonitor(1080, 1920);
     set_position(0, 0);
     add_events(Gdk::POINTER_MOTION_MASK | Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::SCROLL_MASK);
 }
@@ -169,6 +164,7 @@ bool DrawArea::on_scroll_event(GdkEventScroll *event) {
 }
 
 MonitorConfig *DrawArea::get_monitor_config() {
-    _monitor_config.scale_monitors(_image_original->get_width(), _image_original->get_height(), _last_image_scale);
+    _monitor_config.prepare_cfg_for_crop(_image_original->get_width(), _image_original->get_height(), _last_image_scale,
+                                         _x, _y, _last_monitor_scale);
     return &_monitor_config;
 }

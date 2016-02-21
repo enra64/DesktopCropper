@@ -5,21 +5,21 @@
 #include "Rect.h"
 
 void Rect::scale_position(double factor) {
-    x = (x_original * factor);
-    y = (y_original * factor);
+    x = (x * factor);
+    y = (y * factor);
 }
 
-void Rect::scale_size(double factor) {
+void Rect::scale_size_from_original(double factor) {
     w = (w_original * factor);
     h = (h_original * factor);
 }
 
 void Rect::scale_all(double factor) {
     scale_position(factor);
-    scale_size(factor);
+    scale_size_from_original(factor);
 }
 
-Rect::Rect(int x, int y, int w, int h) {
+Rect::Rect(double x, double y, double w, double h) {
     this->x = x;
     this->y = y;
     this->w = w;

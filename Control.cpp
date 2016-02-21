@@ -43,7 +43,7 @@ void Control::onCreateClicked() {
     std::string resized_image_path = resized_image_location.str();
 
     //resize image to fit monitors
-    resize_image_cmd << "convert \"" << _image_path << "\" -resize " << cfg->required_image_scale * 100 << "% \"" <<
+    resize_image_cmd << "convert \"" << _image_path << "\" -resize " << cfg->_required_image_scale * 100 << "% \"" <<
     resized_image_path << "\"";
     system(resize_image_cmd.str().c_str());
     std::cout << resize_image_cmd.str() << '\n';
@@ -56,12 +56,6 @@ void Control::onCreateClicked() {
     remove_resized_image_cmd << "rm " << "\"" << resized_image_path << "\"";
     //system(remove_resized_image_cmd.str().c_str());
     std::cout << remove_resized_image_cmd.str() << '\n';
-}
-
-std::string Control::get_crop_args(Rect r) {
-    std::stringstream ss;
-    ss << r.get_w() << "x" << r.get_h() << "+" << r.get_x() << "+" << r.get_y();
-    return ss.str();
 }
 
 void Control::onLoadClicked() {

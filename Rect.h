@@ -9,24 +9,21 @@
 class Rect {
 public:
     int get_x();
-
     int get_y();
-
     int get_w();
-
     int get_h();
 
     void set_position(double x, double y);
 
     void set_original_size(double w, double h);
 
-    void scale_size(double factor);
+    void scale_size_from_original(double factor);
 
     void scale_position(double factor);
 
     void scale_all(double factor);
 
-    Rect(int x, int y, int w, int h);
+    Rect(double x, double y, double w, double h);
 
     Rect();
 

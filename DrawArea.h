@@ -13,17 +13,11 @@
 #include "MonitorConfig.h"
 
 
-#define LEFT 0
-#define MIDDLE 1
-#define RIGHT 2
-
 class DrawArea : public Gtk::DrawingArea {
 public:
     DrawArea();
 
     virtual ~DrawArea();
-
-    void set_monitor_sizes(int wLeft, int hLeft, int wMiddle, int hMiddle, int wRight, int hRight);
 
     void set_position(double x, double y);
 

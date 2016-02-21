@@ -55,8 +55,6 @@ private:
 
     void y_spin_button_clicked();
 
-    std::string get_crop_args(Rect r);
-
     Cairo::RefPtr<Cairo::Context> drawContext;
     Gtk::Scale *image_scale;
     Gtk::Scale *monitor_scale;
