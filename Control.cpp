@@ -10,16 +10,9 @@
 #include <iostream>
 #include "Control.h"
 
-void Control::onCreateClicked() {
-    Gtk::FileChooserDialog dialog("Save", Gtk::FILE_CHOOSER_ACTION_SAVE);
 
-    dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
-
-    int result = dialog.run();
-
-    std::string filename = dialog.get_filename();
+void Control::create(std::string filename, bool verbose) {
     std::string dir = filename.substr(0, filename.find_last_of("/"));
-
     std::string name, ext;
 
     if (filename.find_last_of(".") == std::string::npos) {
@@ -46,16 +39,35 @@ void Control::onCreateClicked() {
     resize_image_cmd << "convert \"" << _image_path << "\" -resize " << cfg->_required_image_scale * 100 << "% \"" <<
     resized_image_path << "\"";
     system(resize_image_cmd.str().c_str());
-    std::cout << resize_image_cmd.str() << '\n';
 
-    system(cfg->get_image_magick_cmd(0, dir, name, ext, resized_image_path).c_str());
-    system(cfg->get_image_magick_cmd(1, dir, name, ext, resized_image_path).c_str());
-    system(cfg->get_image_magick_cmd(2, dir, name, ext, resized_image_path).c_str());
+    system(cfg->get_image_magick_cmd(0, dir, name, ext, resized_image_path, verbose).c_str());
+    system(cfg->get_image_magick_cmd(1, dir, name, ext, resized_image_path, verbose).c_str());
+    system(cfg->get_image_magick_cmd(2, dir, name, ext, resized_image_path, verbose).c_str());
 
     //remove the resized image
     remove_resized_image_cmd << "rm " << "\"" << resized_image_path << "\"";
-    //system(remove_resized_image_cmd.str().c_str());
-    std::cout << remove_resized_image_cmd.str() << '\n';
+    system(remove_resized_image_cmd.str().c_str());
+
+    if (verbose) {
+        std::cout << resize_image_cmd.str() << '\n';
+        std::cout << remove_resized_image_cmd.str() << '\n';
+    }
+}
+
+void Control::on_save_clicked() {
+    create(_last_filename, false);
+}
+
+void Control::on_save_as_clicked() {
+    Gtk::FileChooserDialog dialog("Save", Gtk::FILE_CHOOSER_ACTION_SAVE);
+    dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
+    dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_CANCEL);
+
+    if (dialog.run() == Gtk::RESPONSE_OK) {
+        _last_filename = dialog.get_filename();
+        _menu_save->set_sensitive(true);
+        create(_last_filename, false);
+    }
 }
 
 void Control::onLoadClicked() {
@@ -86,27 +98,21 @@ void Control::onLoadClicked() {
 
 Gtk::Window *Control::init(Glib::RefPtr<Gtk::Builder> builder) {
     Gtk::Window *window;
-    Gtk::Button *loadFileButton;
-    Gtk::Button *createOutputButton;
     Gtk::Paned *pane;
 
     builder->get_widget("main_window", window);
-    builder->get_widget("load_file_button", loadFileButton);
-    builder->get_widget("create_button", createOutputButton);
     builder->get_widget("main_pane", pane);
 
     init_find_all(builder);
     init_spin_buttons(builder);
     init_scales(builder);
+    init_menu(builder);
 
     pane->add2(_drawArea);
 
     Gtk::Label *label;
     builder->get_widget("scale_warning_label", label);
     _drawArea.set_scale_warning_label(label);
-
-    loadFileButton->signal_clicked().connect(sigc::mem_fun(this, &Control::onLoadClicked));
-    createOutputButton->signal_clicked().connect(sigc::mem_fun(this, &Control::onCreateClicked));
 
     window->set_size_request(1920, 1080);
 
@@ -117,16 +123,28 @@ Control::Control() {
 
 }
 
+void Control::init_menu(Glib::RefPtr<Gtk::Builder> builder) {
+    builder->get_widget("menu_open", _menu_open);
+    builder->get_widget("menu_save", _menu_save);
+    builder->get_widget("menu_save_as", _menu_save_as);
+
+    _menu_open->signal_activate().connect(sigc::mem_fun(this, &Control::onLoadClicked));
+    _menu_save->signal_activate().connect(sigc::mem_fun(this, &Control::on_save_clicked));
+    _menu_save_as->signal_activate().connect(sigc::mem_fun(this, &Control::on_save_as_clicked));
+
+    _menu_save->set_sensitive(false);
+}
+
 void Control::init_scales(Glib::RefPtr<Gtk::Builder> builder) {
     _image_scale->set_range(0.5, 10);
     _monitor_scale->set_range(0, 500);
     _x_monitor_position_scale->set_range(0, 5000);
-    y_monitor_position_scale->set_range(0, 5000);
+    _y_monitor_position_scale->set_range(0, 5000);
 
     _image_scale->signal_value_changed().connect(sigc::mem_fun(this, &Control::image_scale_moved));
     _monitor_scale->signal_value_changed().connect(sigc::mem_fun(this, &Control::monitor_scale_moved));
     _x_monitor_position_scale->signal_value_changed().connect(sigc::mem_fun(this, &Control::x_scale_moved));
-    y_monitor_position_scale->signal_value_changed().connect(sigc::mem_fun(this, &Control::y_scale_moved));
+    _y_monitor_position_scale->signal_value_changed().connect(sigc::mem_fun(this, &Control::y_scale_moved));
 }
 
 void Control::init_spin_buttons(Glib::RefPtr<Gtk::Builder> builder) {
@@ -162,8 +180,8 @@ void Control::x_scale_moved() {
 }
 
 void Control::y_scale_moved() {
-    _drawArea.set_position(-1, (int) y_monitor_position_scale->get_value());
-    _y_monitor_position_spin_btn->set_value(y_monitor_position_scale->get_value());
+    _drawArea.set_position(-1, (int) _y_monitor_position_scale->get_value());
+    _y_monitor_position_spin_btn->set_value(_y_monitor_position_scale->get_value());
 }
 
 void Control::image_spin_button_clicked() {
@@ -183,14 +201,14 @@ void Control::x_spin_button_clicked() {
 
 void Control::y_spin_button_clicked() {
     _drawArea.set_position(-1, (int) _y_monitor_position_spin_btn->get_value());
-    y_monitor_position_scale->set_value(_y_monitor_position_spin_btn->get_value());
+    _y_monitor_position_scale->set_value(_y_monitor_position_spin_btn->get_value());
 }
 
 void Control::init_find_all(Glib::RefPtr<Gtk::Builder> builder) {
     builder->get_widget("scale_image", _image_scale);
     builder->get_widget("scale_monitors", _monitor_scale);
     builder->get_widget("x_monitors", _x_monitor_position_scale);
-    builder->get_widget("y_monitors", y_monitor_position_scale);
+    builder->get_widget("y_monitors", _y_monitor_position_scale);
 
     builder->get_widget("image_scale_spin_button", _image_scale_spin_btn);
     builder->get_widget("monitor_scale_spin_button", _monitor_scale_spin_btn);
@@ -205,7 +223,7 @@ void Control::monitor_moved_x(double x) {
 
 void Control::monitor_moved_y(double y) {
     _y_monitor_position_spin_btn->set_value(y);
-    y_monitor_position_scale->set_value(y);
+    _y_monitor_position_scale->set_value(y);
 }
 
 void Control::monitor_scaled(double new_factor) {

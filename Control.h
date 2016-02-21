@@ -14,7 +14,7 @@
 
 class Control {
 public:
-    void onCreateClicked();
+    void on_save_clicked();
 
     void onLoadClicked();
 
@@ -39,6 +39,12 @@ private:
 
     void init_find_all(Glib::RefPtr<Gtk::Builder> builder);
 
+    void init_menu(Glib::RefPtr<Gtk::Builder> builder);
+
+    void on_save_as_clicked();
+
+    void create(std::string path, bool verbose);
+
     void image_scale_moved();
 
     void monitor_scale_moved();
@@ -59,12 +65,15 @@ private:
     Gtk::Scale *_image_scale;
     Gtk::Scale *_monitor_scale;
     Gtk::Scale *_x_monitor_position_scale;
-    Gtk::Scale *y_monitor_position_scale;
+    Gtk::Scale *_y_monitor_position_scale;
+    Gtk::MenuItem *_menu_open;
+    Gtk::MenuItem *_menu_save;
+    Gtk::MenuItem *_menu_save_as;
     Gtk::SpinButton *_image_scale_spin_btn;
     Gtk::SpinButton *_monitor_scale_spin_btn;
     Gtk::SpinButton *_x_monitor_position_spin_btn;
     Gtk::SpinButton *_y_monitor_position_spin_btn;
-    std::string _image_path;
+    std::string _image_path, _last_filename;
 };
 
 #endif //DESKTOP_CROPPER_CONTROL_H

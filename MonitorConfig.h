@@ -30,7 +30,7 @@ public:
     void addMonitor(double w, double h);
 
     std::string get_image_magick_cmd(unsigned long index, std::string dir, std::string name, std::string ext,
-                                     std::string resized_image_path);
+                                     std::string resized_image_path, bool verbose);
 
     double _required_image_scale = 0;
 

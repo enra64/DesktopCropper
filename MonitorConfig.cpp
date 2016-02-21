@@ -7,7 +7,7 @@
 #include "MonitorConfig.h"
 
 std::string MonitorConfig::get_image_magick_cmd(unsigned long index, std::string dir, std::string name, std::string ext,
-                                                std::string resized_image_path) {
+                                                std::string resized_image_path, bool verbose) {
     std::stringstream right_stream;
     char ending;
     switch (index) {
@@ -25,7 +25,8 @@ std::string MonitorConfig::get_image_magick_cmd(unsigned long index, std::string
     }
     right_stream << "convert \"" << resized_image_path << "\" -crop " << get_crop_args(index) << " \"" <<
     dir << "/" << name << "_" << ending << ext << "\"";
-    std::cout << right_stream.str() << '\n';
+    if (verbose)
+        std::cout << right_stream.str() << '\n';
     return right_stream.str();
 }
 
