@@ -25,7 +25,7 @@ void Control::create(std::string filename, bool verbose) {
         ext = filename.substr(filename.find_last_of("."));
     }
 
-    MonitorConfig *cfg = _drawArea.get_monitor_config();
+    MonitorConfig cfg = _drawArea.get_monitor_config();
 
     std::stringstream resized_image_location;
     std::stringstream resize_image_cmd;
@@ -36,13 +36,13 @@ void Control::create(std::string filename, bool verbose) {
     std::string resized_image_path = resized_image_location.str();
 
     //resize image to fit monitors
-    resize_image_cmd << "convert \"" << _image_path << "\" -resize " << cfg->_required_image_scale * 100 << "% \"" <<
+    resize_image_cmd << "convert \"" << _image_path << "\" -resize " << cfg._required_image_scale * 100 << "% \"" <<
     resized_image_path << "\"";
     system(resize_image_cmd.str().c_str());
 
-    system(cfg->get_image_magick_cmd(0, dir, name, ext, resized_image_path, verbose).c_str());
-    system(cfg->get_image_magick_cmd(1, dir, name, ext, resized_image_path, verbose).c_str());
-    system(cfg->get_image_magick_cmd(2, dir, name, ext, resized_image_path, verbose).c_str());
+    system(cfg.get_image_magick_cmd(0, dir, name, ext, resized_image_path, verbose).c_str());
+    system(cfg.get_image_magick_cmd(1, dir, name, ext, resized_image_path, verbose).c_str());
+    system(cfg.get_image_magick_cmd(2, dir, name, ext, resized_image_path, verbose).c_str());
 
     //remove the resized image
     remove_resized_image_cmd << "rm " << "\"" << resized_image_path << "\"";
@@ -62,7 +62,7 @@ void Control::on_save_clicked() {
 void Control::on_save_as_clicked() {
     Gtk::FileChooserDialog dialog("Save", Gtk::FILE_CHOOSER_ACTION_SAVE);
     dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
-    dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_CANCEL);
+    dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
 
     if (dialog.run() == Gtk::RESPONSE_OK) {
         _last_filename = dialog.get_filename();

@@ -24,7 +24,7 @@ public:
 
     double get_last_image_scale();
 
-    MonitorConfig *get_monitor_config();
+    MonitorConfig get_monitor_config();
 
     double get_last_monitor_scale();
 

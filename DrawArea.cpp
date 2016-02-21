@@ -165,10 +165,11 @@ bool DrawArea::on_scroll_event(GdkEventScroll *event) {
     return true;
 }
 
-MonitorConfig *DrawArea::get_monitor_config() {
-    _monitor_config.prepare_cfg_for_crop(_image_original->get_width(), _image_original->get_height(), _last_image_scale,
+MonitorConfig DrawArea::get_monitor_config() {
+    MonitorConfig cfg = MonitorConfig(_monitor_config);
+    cfg.prepare_cfg_for_crop(_image_original->get_width(), _image_original->get_height(), _last_image_scale,
                                          _x, _y, _last_monitor_scale);
-    return &_monitor_config;
+    return cfg;
 }
 
 void DrawArea::update_scale_warning_label() {
